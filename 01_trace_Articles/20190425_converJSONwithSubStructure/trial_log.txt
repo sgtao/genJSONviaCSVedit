@@ -1,0 +1,419 @@
+# trial_log.txt
+
+- もとの書式を理解するため順番に実行する
+
+
+### テストデータ
+```
+shogo@raspberrypi4:$ cat test01.json
+{
+  "a": "123",
+  "b": {
+    "bbb": "456",
+    "bcc": "789"
+  }
+}
+shogo@raspberrypi4:$ cat test02.json
+{
+  "a": "123",
+  "b": {
+    "bbb": "456",
+    "bcc": "789",
+    "fff": {
+      "dddddd": "456",
+      "eeeeee": "789"
+    }
+    },
+  "c": {
+    "ddd": "456",
+    "eee": "789"
+  }
+}
+shogo@raspberrypi4:$
+```
+
+### 関数の実行１
+
+```
+shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | .; walk("")' test01.json
+{
+  "a": "123",
+  "b": {
+    "bbb": "456",
+    "bcc": "789"
+  }
+}
+shogo@raspberrypi4:$ cat test01.json
+{
+  "a": "123",
+  "b": {
+    "bbb": "456",
+    "bcc": "789"
+  }
+}
+shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | .; walk("")' test02.json
+{
+  "a": "123",
+  "b": {
+    "bbb": "456",
+    "bcc": "789",
+    "fff": {
+      "dddddd": "456",
+      "eeeeee": "789"
+    }
+  },
+  "c": {
+    "ddd": "456",
+    "eee": "789"
+  }
+}
+shogo@raspberrypi4:$
+```
+
+
+### 関数内のデータ加工
+
+```
+shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | to_entries; walk("")' test01.
+json
+[
+  {
+    "key": "a",
+    "value": "123"
+  },
+  {
+    "key": "b",
+    "value": {
+      "bbb": "456",
+      "bcc": "789"
+    }
+  }
+]
+shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | to_entries | .[] ; walk("")'
+test01.json
+{
+  "key": "a",
+  "value": "123"
+}
+{
+  "key": "b",
+  "value": {
+    "bbb": "456",
+    "bcc": "789"
+  }
+}
+shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | to_entries | .[] | {key: ($k
++ .key), value: .value} ; walk("")' test01.json
+{
+  "key": "a",
+  "value": "123"
+}
+{
+  "key": "b",
+  "value": {
+    "bbb": "456",
+    "bcc": "789"
+  }
+}
+shogo@raspberrypi4:$
+```
+
+### 関数の再起処理
+```
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
+: ($k + .key), value: .value} |  .key as $key ; walk("") ' test02.json
+jq: error: syntax error, unexpected ';', expecting '|' (Unix shell quoting issues?) at <top-level>, line 1:
+def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key ; walk("")                                                       
+jq: 1 compile error
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
+: ($k + .key), value: .value} |  ( select(.value | type | .=="string") // (.valu
+e | walk($key + ".")) ); walk("") ' test02.json
+jq: error: key/0 is not defined at <top-level>, line 1:
+def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); walk("")                                                                              
+jq: 1 compile error
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); walk("") ' test01.json
+{"key":"a","value":"123"}
+{"key":"b.bbb","value":"456"}
+{"key":"b.bcc","value":"789"}
+shogo@raspberrypi4:$
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
+: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); walk("") ' test02.json
+{"key":"a","value":"123"}
+{"key":"b.bbb","value":"456"}
+{"key":"b.bcc","value":"789"}
+{"key":"b.fff.dddddd","value":"456"}
+{"key":"b.fff.eeeeee","value":"789"}
+{"key":"c.ddd","value":"456"}
+{"key":"c.eee","value":"789"}
+shogo@raspberrypi4:$
+```
+
+
+- 複雑なデータで試してみる→失敗
+```
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); walk("") ' corona1column.json
+jq: error (at corona1column.json:34): number (1657665727971) has no keys
+shogo@raspberrypi4:$ cat corona1column.json
+{
+  "updated": 1657665727971,
+  "country": "USA",
+  "countryInfo": {
+    "_id": 840,
+    "iso2": "US",
+    "iso3": "USA",
+    "lat": 38,
+    "long": -97,
+    "flag": "https://disease.sh/assets/img/flags/us.png"
+  },
+  "cases": 90581285,
+  "todayCases": 47286,
+  "deaths": 1046414,
+  "todayDeaths": 137,
+  "recovered": 86073207,
+  "todayRecovered": 46766,
+  "active": 3461664,
+  "critical": 3889,
+  "casesPerOneMillion": 0,
+  "deathsPerOneMillion": 0,
+  "tests": 1057778224,
+  "testsPerOneMillion": 0,
+  "population": 0,
+  "continent": "North America",
+  "oneCasePerPeople": 0,
+  "oneDeathPerPeople": 0,
+  "oneTestPerPeople": 0,
+  "activePerOneMillion": 0,
+  "recoveredPerOneMillion": 0,
+  "criticalPerOneMillion": 0,
+  "confirmed": 90581285,
+  "countryCode": "US"
+}
+     1  {
+     2    "updated": 1657665727971,
+     3    "country": "USA",
+     4    "countryInfo": {
+     5      "_id": 840,
+     6      "iso2": "US",
+     7      "iso3": "USA",
+     8      "lat": 38,
+     9      "long": -97,
+    10      "flag": "https://disease.sh/assets/img/flags/us.png"
+    11    },
+    12    "cases": 90581285,
+    13    "todayCases": 47286,
+    14    "deaths": 1046414,
+    15    "todayDeaths": 137,
+    16    "recovered": 86073207,
+    17    "todayRecovered": 46766,
+    18    "active": 3461664,
+    19    "critical": 3889,
+    20    "casesPerOneMillion": 0,
+    21    "deathsPerOneMillion": 0,
+    22    "tests": 1057778224,
+    23    "testsPerOneMillion": 0,
+    24    "population": 0,
+    25    "continent": "North America",
+    26    "oneCasePerPeople": 0,
+    27    "oneDeathPerPeople": 0,
+    28    "oneTestPerPeople": 0,
+    29    "activePerOneMillion": 0,
+    30    "recoveredPerOneMillion": 0,
+    31    "criticalPerOneMillion": 0,
+    32    "confirmed": 90581285,
+    33    "countryCode": "US"
+    34  }
+shogo@raspberrypi4:$
+```
+
+
+- エラー対象の分析：numberがあったからNGそう
+```
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
+: ($k + .key), value: .value} |  .key as $key |  .value | type ; walk("") ' coro
+na1column.json
+number # ＜ーここでエラーしてた
+string
+object
+number
+number
+number
+number
+number
+number
+number
+number
+number
+number
+number
+number
+number
+string
+number
+number
+number
+number
+number
+number
+number
+string
+shogo@raspberrypi4:$
+```
+
+- エラー対処案１（stringとnumberは残すように変更）
+```
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
+: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="st
+ring" or .=="number") // (.value | walk($key + ".")) ); walk("") ' corona1column
+.json
+{"key":"updated","value":1657665727971}
+{"key":"country","value":"USA"}
+{"key":"countryInfo._id","value":840}
+{"key":"countryInfo.iso2","value":"US"}
+{"key":"countryInfo.iso3","value":"USA"}
+{"key":"countryInfo.lat","value":38}
+{"key":"countryInfo.long","value":-97}
+{"key":"countryInfo.flag","value":"https://disease.sh/assets/img/flags/us.png"}
+{"key":"cases","value":90581285}
+{"key":"todayCases","value":47286}
+{"key":"deaths","value":1046414}
+{"key":"todayDeaths","value":137}
+{"key":"recovered","value":86073207}
+{"key":"todayRecovered","value":46766}
+{"key":"active","value":3461664}
+{"key":"critical","value":3889}
+{"key":"casesPerOneMillion","value":0}
+{"key":"deathsPerOneMillion","value":0}
+{"key":"tests","value":1057778224}
+{"key":"testsPerOneMillion","value":0}
+{"key":"population","value":0}
+{"key":"continent","value":"North America"}
+{"key":"oneCasePerPeople","value":0}
+{"key":"oneDeathPerPeople","value":0}
+{"key":"oneTestPerPeople","value":0}
+{"key":"activePerOneMillion","value":0}
+{"key":"recoveredPerOneMillion","value":0}
+{"key":"criticalPerOneMillion","value":0}
+{"key":"confirmed","value":90581285}
+{"key":"countryCode","value":"US"}
+shogo@raspberrypi4:$
+```
+
+
+### 対処案１でJSONtoCSV変換を試みる
+
+```
+shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string" or .=="number") // (.value | walk($key + ".")) ); walk("") | [.key, .value] | @csv' corona1column.json
+"updated",1657665727971
+"country","USA"
+"countryInfo._id",840
+"countryInfo.iso2","US"
+"countryInfo.iso3","USA"
+"countryInfo.lat",38
+"countryInfo.long",-97
+"countryInfo.flag","https://disease.sh/assets/img/flags/us.png"
+"cases",90581285
+"todayCases",47286
+"deaths",1046414
+"todayDeaths",137
+"recovered",86073207
+"todayRecovered",46766
+"active",3461664
+"critical",3889
+"casesPerOneMillion",0
+"deathsPerOneMillion",0
+"tests",1057778224
+"testsPerOneMillion",0
+"population",0
+"continent","North America"
+"oneCasePerPeople",0
+"oneDeathPerPeople",0
+"oneTestPerPeople",0
+"activePerOneMillion",0
+"recoveredPerOneMillion",0
+"criticalPerOneMillion",0
+"confirmed",90581285
+"countryCode","US"
+shogo@raspberrypi4:$
+```
+
+
+### スクリプトにしてみる
+
+- main.jq
+```
+def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string" or .=="number") // (.value | walk($key + ".")) ); walk("") | [.key, .value] | @csv
+```
+
+- 実行テスト：`\"`が入ってしまう
+```
+shogo@raspberrypi4:$ jq -f main.jq test01.json
+"\"a\",\"123\""
+"\"b.bbb\",\"456\""
+"\"b.bcc\",\"789\""
+shogo@raspberrypi4:$
+```
+
+- `sed`で変換
+```
+shogo@raspberrypi4:$ jq -f main.jq test01.json | sed -e "s/\\\\\"/\"/g"
+""a","123""
+""b.bbb","456""
+""b.bcc","789""
+shogo@raspberrypi4:$ jq -f main.jq test01.json | sed -e "s/\\\\\"/\"/g" | sed -e "s/\"\"/\"/g"
+"a","123"
+"b.bbb","456"
+"b.bcc","789"
+shogo@raspberrypi4:$
+```
+
+
+### もう一度実行
+```
+shogo@raspberrypi4:$ jq -f main.jq test01.json | sed -e "s/\\\\\"/\"/g" | sed -e "s/\"\"/\"/g"
+"a","123"
+"b.bbb","456"
+"b.bcc","789"
+shogo@raspberrypi4:$ jq -f main.jq test02.json | sed -e "s/\\\\\"/\"/g" | sed -e
+ "s/\"\"/\"/g"
+"a","123"
+"b.bbb","456"
+"b.bcc","789"
+"b.fff.dddddd","456"
+"b.fff.eeeeee","789"
+"c.ddd","456"
+"c.eee","789"
+shogo@raspberrypi4:$
+shogo@raspberrypi4:$ jq -f main.jq corona1column.json | sed -e "s/\\\\\"/\"/g" |
+ sed -e "s/\"\"/\"/g"
+"updated",1657665727971"
+"country","USA"
+"countryInfo._id",840"
+"countryInfo.iso2","US"
+"countryInfo.iso3","USA"
+"countryInfo.lat",38"
+"countryInfo.long",-97"
+"countryInfo.flag","https://disease.sh/assets/img/flags/us.png"
+"cases",90581285"
+"todayCases",47286"
+"deaths",1046414"
+"todayDeaths",137"
+"recovered",86073207"
+"todayRecovered",46766"
+"active",3461664"
+"critical",3889"
+"casesPerOneMillion",0"
+"deathsPerOneMillion",0"
+"tests",1057778224"
+"testsPerOneMillion",0"
+"population",0"
+"continent","North America"
+"oneCasePerPeople",0"
+"oneDeathPerPeople",0"
+"oneTestPerPeople",0"
+"activePerOneMillion",0"
+"recoveredPerOneMillion",0"
+"criticalPerOneMillion",0"
+"confirmed",90581285"
+"countryCode","US"
+shogo@raspberrypi4:$
+```
