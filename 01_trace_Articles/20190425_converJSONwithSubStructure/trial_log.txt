@@ -1,9 +1,9 @@
 # trial_log.txt
 
-- ‚à‚Æ‚Ì‘®‚ğ—‰ğ‚·‚é‚½‚ß‡”Ô‚ÉÀs‚·‚é
+- ã‚‚ã¨ã®æ›¸å¼ã‚’ç†è§£ã™ã‚‹ãŸã‚é †ç•ªã«å®Ÿè¡Œã™ã‚‹
 
 
-### ƒeƒXƒgƒf[ƒ^
+### ãƒ†ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿
 ```
 shogo@raspberrypi4:$ cat test01.json
 {
@@ -32,7 +32,7 @@ shogo@raspberrypi4:$ cat test02.json
 shogo@raspberrypi4:$
 ```
 
-### ŠÖ”‚ÌÀs‚P
+### é–¢æ•°ã®å®Ÿè¡Œï¼‘
 
 ```
 shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | .; walk("")' test01.json
@@ -71,7 +71,7 @@ shogo@raspberrypi4:$
 ```
 
 
-### ŠÖ”“à‚Ìƒf[ƒ^‰ÁH
+### é–¢æ•°å†…ã®ãƒ‡ãƒ¼ã‚¿åŠ å·¥
 
 ```
 shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | to_entries; walk("")' test01.
@@ -118,7 +118,7 @@ shogo@raspberrypi4:$ jq -r 'def walk(k): k as $k | to_entries | .[] | {key: ($k
 shogo@raspberrypi4:$
 ```
 
-### ŠÖ”‚ÌÄ‹Nˆ—
+### é–¢æ•°ã®å†èµ·å‡¦ç†
 ```
 shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
 : ($k + .key), value: .value} |  .key as $key ; walk("") ' test02.json
@@ -149,7 +149,7 @@ shogo@raspberrypi4:$
 ```
 
 
-- •¡G‚Èƒf[ƒ^‚Å‚µ‚Ä‚İ‚é¨¸”s
+- è¤‡é›‘ãªãƒ‡ãƒ¼ã‚¿ã§è©¦ã—ã¦ã¿ã‚‹â†’å¤±æ•—
 ```
 shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); walk("") ' corona1column.json
 jq: error (at corona1column.json:34): number (1657665727971) has no keys
@@ -226,12 +226,12 @@ shogo@raspberrypi4:$
 ```
 
 
-- ƒGƒ‰[‘ÎÛ‚Ì•ªÍFnumber‚ª‚ ‚Á‚½‚©‚çNG‚»‚¤
+- ã‚¨ãƒ©ãƒ¼å¯¾è±¡ã®åˆ†æï¼šnumberãŒã‚ã£ãŸã‹ã‚‰NGãã†
 ```
 shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
 : ($k + .key), value: .value} |  .key as $key |  .value | type ; walk("") ' coro
 na1column.json
-number # ƒ[‚±‚±‚ÅƒGƒ‰[‚µ‚Ä‚½
+number # ï¼œãƒ¼ã“ã“ã§ã‚¨ãƒ©ãƒ¼ã—ã¦ãŸ
 string
 object
 number
@@ -259,7 +259,7 @@ string
 shogo@raspberrypi4:$
 ```
 
-- ƒGƒ‰[‘ÎˆˆÄ‚Pistring‚Ænumber‚Íc‚·‚æ‚¤‚É•ÏXj
+- ã‚¨ãƒ©ãƒ¼å¯¾å‡¦æ¡ˆï¼‘ï¼ˆstringã¨numberã¯æ®‹ã™ã‚ˆã†ã«å¤‰æ›´ï¼‰
 ```
 shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key
 : ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="st
@@ -299,7 +299,7 @@ shogo@raspberrypi4:$
 ```
 
 
-### ‘ÎˆˆÄ‚P‚ÅJSONtoCSV•ÏŠ·‚ğ‚İ‚é
+### å¯¾å‡¦æ¡ˆï¼‘ã§JSONtoCSVå¤‰æ›ã‚’è©¦ã¿ã‚‹
 
 ```
 shogo@raspberrypi4:$ jq -c -r 'def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string" or .=="number") // (.value | walk($key + ".")) ); walk("") | [.key, .value] | @csv' corona1column.json
@@ -337,14 +337,14 @@ shogo@raspberrypi4:$
 ```
 
 
-### ƒXƒNƒŠƒvƒg‚É‚µ‚Ä‚İ‚é
+### ã‚¹ã‚¯ãƒªãƒ—ãƒˆã«ã—ã¦ã¿ã‚‹
 
 - main.jq
 ```
 def walk(k): k as $k |  to_entries |  .[] |  {key: ($k + .key), value: .value} |  .key as $key |  ( select(.value | type | .=="string" or .=="number") // (.value | walk($key + ".")) ); walk("") | [.key, .value] | @csv
 ```
 
-- ÀsƒeƒXƒgF`\"`‚ª“ü‚Á‚Ä‚µ‚Ü‚¤
+- å®Ÿè¡Œãƒ†ã‚¹ãƒˆï¼š`\"`ãŒå…¥ã£ã¦ã—ã¾ã†
 ```
 shogo@raspberrypi4:$ jq -f main.jq test01.json
 "\"a\",\"123\""
@@ -353,7 +353,7 @@ shogo@raspberrypi4:$ jq -f main.jq test01.json
 shogo@raspberrypi4:$
 ```
 
-- `sed`‚Å•ÏŠ·
+- `sed`ã§å¤‰æ›
 ```
 shogo@raspberrypi4:$ jq -f main.jq test01.json | sed -e "s/\\\\\"/\"/g"
 ""a","123""
@@ -367,7 +367,7 @@ shogo@raspberrypi4:$
 ```
 
 
-### ‚à‚¤ˆê“xÀs
+### ã‚‚ã†ä¸€åº¦å®Ÿè¡Œ
 ```
 shogo@raspberrypi4:$ jq -f main.jq test01.json | sed -e "s/\\\\\"/\"/g" | sed -e "s/\"\"/\"/g"
 "a","123"

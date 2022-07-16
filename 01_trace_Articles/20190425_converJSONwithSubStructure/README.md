@@ -1,4 +1,3 @@
-# 20190425_converJSONwithSubStructure
 - Qiita記事「jqで階層構造を持つオブジェクトをCSVにマップする」
   - refer : https://qiita.com/ma2saka/items/210ad80d36a49a1dd694
 
