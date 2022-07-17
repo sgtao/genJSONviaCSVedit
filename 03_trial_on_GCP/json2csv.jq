@@ -3,7 +3,10 @@ def walk(k): k as $k |
         .[] | 
         {key: ($k + .key), value: .value} | 
         .key as $key | 
-        ( select(.value | type | .=="string") // (.value | walk($key + ".")) ); 
+        ( select(.value | type | .=="string" or .=="number" or .=="boolean" ) // (
+            .value | 
+            walk($key + ".")
+        ) ); 
 walk("") |
 [ .key, .value ] | 
 @csv
