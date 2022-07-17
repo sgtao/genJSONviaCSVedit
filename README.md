@@ -1,6 +1,10 @@
 # generateJSONthroghCSVedit
 - JSONデータ生成環境を作りたい
   - JSON to CSV, edit CSV, CSV to JSONの流れで処理する環境を作る
+  - 参考サイト：JQサイト（マニュアル）：
+    - 本家サイト：https://stedolan.github.io/jq/
+    - 日本語版　：https://yujiorama.github.io/unofficial-translations/jq/l10n/jp/manual/
+    - jqplay(jq on web) : https://jqplay.org/
   - 参考サイト：https://www.convertcsv.com/csv-to-json.htm （JSONのマッピングを定義できる）
 
 ## 方法
