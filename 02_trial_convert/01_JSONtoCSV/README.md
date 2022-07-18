@@ -9,15 +9,14 @@
 - Qiita記事「[jqで階層構造を持つオブジェクトをCSVにマップする](https://qiita.com/ma2saka/items/210ad80d36a49a1dd694)」に習い、JSONオブジェクトを変換してみる
 
 ```
-def walk(k):
-  k as $k
+def walk(k): k as $k
   | to_entries
   | .[]
   | { key: ($k + .key), value: .value}
   | .key as $key
-  | select(.value | type | .== "string" or.== "number") // (
-    .value | 
-    walk($key + ".")
+  | select(.value | type | .== "string" or .== "number" or .== "boolean") // (
+        .value 
+        | walk($key + ".")
   )
   ;
 walk("")
@@ -55,8 +54,8 @@ walk("")
 
 - ⇒　ただしこのフィルタでは配列を含むとエラーする
 
-### 実験．
-― 
+### 実験．JSON配列ファイルの変換
+- 配列ファイルは
 ```
 . | ( keys | .[]  ) as $itemNo | { "_item\( $itemNo)" : .[$itemNo] } 
 ```
@@ -99,3 +98,65 @@ walk("")
 }
 ```
 
+### 実験．JSOＮオブジェクトファイル（配列あり）の変換
+
+```
+def walk(k): k as $k
+    | to_entries
+    | .[]
+    | { key: ($k + .key), value: .value}
+    | .key as $key
+    | if (.value | type | .== "array" ) then ( . 
+        | .value 
+        | .[]  
+        | walk($key + "._arrayItem" + ".") 
+    )
+    else .
+      | select(.value | type | .== "string" or .== "number" or .== "boolean") // (
+            .value 
+            | walk($key + ".")
+      )
+    end
+    ;
+walk("")
+| [.key, .value] 
+| @csv
+```
+
+```JSON
+{
+    "a": "123",
+    "b": [
+        { 
+            "ddd": "456",
+            "bcc": {
+                "ddee": "789"
+            }    
+        },
+        { 
+            "ddd": "789",
+            "bcc": {
+                "ddee": "456"
+            }    
+        }
+    ],
+    "c": 345,
+    "d": {
+        "bbb": "456",
+        "bcc": {
+            "ddee": "789"
+        }
+    }
+}
+```
+
+```CSV
+"a","123"
+"b._arrayItem.ddd","456"
+"b._arrayItem.bcc.ddee","789"
+"b._arrayItem.ddd","789"
+"b._arrayItem.bcc.ddee","456"
+"c",345
+"d.bbb","456"
+"d.bcc.ddee","789"
+```

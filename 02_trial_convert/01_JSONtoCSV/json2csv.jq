@@ -1,11 +1,20 @@
-def walk(k): 
-  k as $k |  # 引数を$kで扱う
-  to_entries | 
-  .[] | 
-  { key: ($k + .key), value: .value} | 
-  .key as $key | 
-  (select(.value | type | .== "string" or.== "number") // (
-    .value | 
-    walk($key + "."))
-  ); 
-walk("") | [.key, .value] | @csv
+def walk(k): k as $k
+    | to_entries
+    | .[]
+    | { key: ($k + .key), value: .value}
+    | .key as $key
+    | if (.value | type | .== "array" ) then ( . 
+        | .value 
+        | .[]  
+        | walk($key + "._arrayItem" + ".") 
+    )
+    else .
+      | select(.value | type | .== "string" or .== "number" or .== "boolean") // (
+            .value 
+            | walk($key + ".")
+      )
+    end
+    ;
+walk("")
+| [.key, .value] 
+| @csv
