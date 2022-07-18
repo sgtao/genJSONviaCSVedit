@@ -160,3 +160,22 @@ walk("")
 "d.bbb","456"
 "d.bcc.ddee","789"
 ```
+
+## JSONファイル（マッピングファイル）の準備
+- `awk`コマンドで、JSONファイルからマッピングに使うファイルを作成
+```
+jq -r . test01.json  | awk '/BEGIN/ { idx = 0 } { if ( (index($NF,"{") == 0 ) && (index($NF,"}") == 0) && (index($NF,"[") == 0 ) && (index($NF,"]") == 0 )) { if ( index($2,",") != 0) { printf "%s .[%s],\n",$1,idx; } else { printf "%s .[%s]\n",$1,idx; }; idx++;} else { print $0 } }'  | sed -e"s/\[\]/\[0\]/"
+```
+
+  - 実行結果：
+```shell
+$ jq -r . test01.json  | awk '/BEGIN/ { idx = 0 } { if ( (index($NF,"{") == 0 ) && (index($NF,"}") == 0) && (index($NF,"[") == 0 ) && (index($NF,"]") == 0 )) { if ( index($2,",") != 0) { printf "%s .[%s],\n",$1,idx; } else { printf "%s .[%s]\n",$1,idx; }; idx++;} else { print $0 } }'  | sed -e"s/\[\]/\[0\]/"
+{
+"a": .[0],
+  "b": {
+"bbb": .[1],
+"bcc": .[2]
+  }
+}
+```
+
