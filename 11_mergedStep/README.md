@@ -2,6 +2,27 @@
 - 試行した手順をまとめる。
 
 ## 実行環境
+- この手順では、`jq`、`gawk`、`csvtool`のコマンドを利用してます
+- 各コマンドの版数
+```shell
+$ jq --version
+jq-1.5-1-a5b5cbe
+$ gawk -V | head -1
+GNU Awk 4.2.1, API: 2.0 (GNU MPFR 4.0.2, GNU MP 6.1.2)
+$
+$ apt list csvtool
+csvtool/oldstable,now 1.5-1+b1 armhf [インストール済み]
+$
+```
+
+- 各コマンドがなければインストールしましょう
+```
+sudo apt update
+sudo apt install -y jq
+sudo apt install -y gawk
+sudo apt install -y csvtool
+```
+
 
 ## 手順
 0. JSONファイルを準備する
