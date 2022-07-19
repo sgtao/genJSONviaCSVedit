@@ -74,6 +74,11 @@ $ cat test01.json
 $
 ```
 
+- 後続の手順で利用するディレクトリを作成
+```
+mkdir working
+```
+
 ### 1. JSONをCSVデータ変換
 - ステップ3.で利用するマッピングファイルを作成する
 ```shell
@@ -167,4 +172,25 @@ $ sh 31_csv2json.sh working/test01_map.jq working/test01_mod.csv
 $
 ```
 
+- 配列型のJSONから先頭と最後のアイテムを省けば利用可能なJSONデータとなる
+```shell
+$ sh 31_csv2json.sh working/test01_map.jq working/test01_mod.csv  | jq -r '.[1:-1]'
+[
+  {
+    "a": "456",
+    "b": {
+      "bbb": "789",
+      "bcc": "123"
+    }
+  },
+  {
+    "a": "123",
+    "b": {
+      "bbb": "456",
+      "bcc": "789"
+    }
+  }
+]
+$
+```
 
