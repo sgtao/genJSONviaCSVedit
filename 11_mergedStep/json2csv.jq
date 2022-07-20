@@ -5,8 +5,15 @@ def walk(k): k as $k
     | .key as $key
     | if (.value | type | .== "array" ) then ( . 
         | .value 
-        | .[]  
-        | walk($key + "._arrayItem" + ".") 
+        | to_entries
+        | .[]
+        | .key as $itemNo 
+        | .value
+        | if ( type | .== "string" or .== "number" or .== "boolean" ) then 
+            { key: "\( $key )._arrayItem\( $itemNo )", value: . }
+          else .
+            | walk($key + "._arrayItem\( $itemNo )" + ".") 
+          end
     )
     else .
       | select(.value | type | .== "string" or .== "number" or .== "boolean") // (
